@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
@@ -13,7 +14,6 @@ import org.springframework.stereotype.Repository;
 import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -37,6 +37,7 @@ public class MemberRepository {
                 .build();
         return Optional.ofNullable(namedParameterJdbcTemplate.queryForObject(sql, param, rowMapper));
     }
+
     public Member save(Member member) {
         /**
          * member id를 보고 갱신 또는 삽입을 정한다.
@@ -67,5 +68,6 @@ public class MemberRepository {
     private Member update(Member member) {
         //TODO: implemented
         return null;
+
     }
 }
