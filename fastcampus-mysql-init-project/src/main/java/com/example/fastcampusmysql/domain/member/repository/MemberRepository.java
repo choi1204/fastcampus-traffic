@@ -14,6 +14,7 @@ import org.springframework.stereotype.Repository;
 import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -24,18 +25,29 @@ public class MemberRepository {
 
     private static final String TABLE = "member";
 
+    private  RowMapper<Member> rowMapper = (ResultSet resultSet, int rowNum) -> Member.builder()
+            .id(resultSet.getLong("id"))
+            .email(resultSet.getString("email"))
+            .nickname(resultSet.getString("nickName"))
+            .birthday(resultSet.getObject("birthday", LocalDate.class))
+            .createdAt(resultSet.getObject("createdAt", LocalDateTime.class))
+            .build();
+
     public Optional<Member> findById(Long id) {
         String sql = String.format("SELECT * FROM %s WHERE id = :id", TABLE);
         MapSqlParameterSource param = new MapSqlParameterSource()
                 .addValue("id", id);
-        RowMapper<Member> rowMapper = (ResultSet resultSet, int rowNum) -> Member.builder()
-                .id(resultSet.getLong("id"))
-                .email(resultSet.getString("email"))
-                .nickname(resultSet.getString("nickName"))
-                .birthday(resultSet.getObject("birthday", LocalDate.class))
-                .createdAt(resultSet.getObject("createdAt", LocalDateTime.class))
-                .build();
+
         return Optional.ofNullable(namedParameterJdbcTemplate.queryForObject(sql, param, rowMapper));
+    }
+
+    public List<Member> findAllByIdIn(List<Long> idList) {
+        if (idList.isEmpty()) {
+            return List.of();
+        }
+        String sql = String.format("SELECT * FROM %s WHERE id in (:idList)", TABLE);
+        MapSqlParameterSource params = new MapSqlParameterSource().addValue("idList", idList);
+        return namedParameterJdbcTemplate.query(sql, params, rowMapper);
     }
 
     public Member save(Member member) {
