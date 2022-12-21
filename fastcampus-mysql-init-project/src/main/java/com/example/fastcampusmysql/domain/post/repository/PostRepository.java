@@ -1,13 +1,12 @@
 package com.example.fastcampusmysql.domain.post.repository;
 
-import com.example.fastcampusmysql.domain.PageHelper;
+import com.example.fastcampusmysql.util.PageHelper;
 import com.example.fastcampusmysql.domain.post.dto.DailyPostCount;
 import com.example.fastcampusmysql.domain.post.dto.DailyPostCountRequest;
 import com.example.fastcampusmysql.domain.post.entity.Post;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
@@ -124,16 +123,48 @@ public class PostRepository {
                 .addValue("offset", pageable.getOffset());
 
         var sql = String.format("""
-               SELECT *
-               FROM %s
-               WHERE memberId = :memberId
-               ORDER BY $s
-               LIMIT :size
-               OFFSET :offset
-                """, TABLE, PageHelper.orderBy(pageable.getSort()));
+                SELECT *
+                FROM %s
+                WHERE memberId = :memberId
+                ORDER BY $s
+                LIMIT :size
+                OFFSET :offset
+                 """, TABLE, PageHelper.orderBy(pageable.getSort()));
         List<Post> posts = namedParameterJdbcTemplate.query(sql, params, ROW_MAPPER);
         return new PageImpl(posts, pageable, getCount(memberId));
     }
+
+    public List<Post> findAllByMemberIdAndOrderByDesc(Long memberId, int size) {
+        var sql = String.format("""
+                SELECT *
+                FROM %s
+                WHERE memberId = :memberId
+                ORDER BY id desc
+                LIMIT :size
+                """, TABLE);
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("memberId", memberId)
+                .addValue("size", size)
+                ;
+        return namedParameterJdbcTemplate.query(sql, params, ROW_MAPPER);
+    }
+
+    public List<Post> findAllByLessThanIdAndMemberIdAndOrderByDesc(Long id, Long memberId, int size) {
+        var sql = String.format("""
+                SELECT *
+                FROM %s
+                WHERE memberId = :memberId and id < :id
+                ORDER BY id desc
+                LIMIT :size
+                """, TABLE);
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("memberId", memberId)
+                .addValue("size", size)
+                .addValue("id", id);
+                ;
+        return namedParameterJdbcTemplate.query(sql, params, ROW_MAPPER);
+    }
+
 
     private Long getCount(Long memberId) {
         var sql = String.format("""
