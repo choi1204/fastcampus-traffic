@@ -14,6 +14,11 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.IntStream;
 
+/**
+ * 가장 원초적으로 작성.
+ * 부하테스트 다른 방법 학습 필요
+ * 테스트코드와 같이 돌면 안되는 코드이므로 테스트코드 구동시 따로 빠지게할 수 있을지 고민하면 좋음.
+ */
 @SpringBootTest
 public class PostBulkInsertTest {
 
