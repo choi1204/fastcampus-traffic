@@ -12,7 +12,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.OptionalLong;
 
 @RequiredArgsConstructor
 @Service
@@ -29,15 +28,36 @@ public class PostReadService {
     }
 
     public PageCursor<Post> getPosts(Long memberId, CursorRequest cursorRequest) {
-        List<Post> posts = getPost(memberId, cursorRequest);
-        long nextKey = posts.stream().mapToLong(Post::getId).min().orElse(CursorRequest.NONE_KEY);
+        List<Post> posts = findAllBy(memberId, cursorRequest);
+        long nextKey = getNextKey(posts);
         return new PageCursor<>(cursorRequest.next(nextKey), posts);
     }
 
-    private List<Post> getPost(Long memberId, CursorRequest cursorRequest) {
+    public PageCursor<Post> getPosts(List<Long> memberIdList, CursorRequest cursorRequest) {
+        List<Post> posts = findAllBy(memberIdList, cursorRequest);
+        long nextKey = getNextKey(posts);
+        return new PageCursor<>(cursorRequest.next(nextKey), posts);
+    }
+
+    private long getNextKey(List<Post> posts) {
+        long nextKey = posts.stream()
+                .mapToLong(Post::getId)
+                .min()
+                .orElse(CursorRequest.NONE_KEY);
+        return nextKey;
+    }
+
+    private List<Post> findAllBy(Long memberId, CursorRequest cursorRequest) {
         if (cursorRequest.hasKey()) {
             return postRepository.findAllByLessThanIdAndMemberIdAndOrderByDesc(cursorRequest.key(), memberId, cursorRequest.size());
         }
         return postRepository.findAllByMemberIdAndOrderByDesc(memberId, cursorRequest.size());
+    }
+
+    private List<Post> findAllBy(List<Long> memberIdList, CursorRequest cursorRequest) {
+        if (cursorRequest.hasKey()) {
+            return postRepository.findAllByLessThanIdAndInMemberIdAndOrderByDesc(cursorRequest.key(), memberIdList, cursorRequest.size());
+        }
+        return postRepository.findAllByInMemberIdAndOrderByDesc(memberIdList, cursorRequest.size());
     }
 }
